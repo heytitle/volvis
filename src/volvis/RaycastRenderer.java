@@ -91,20 +91,29 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         int x = (int) Math.floor(coord[0]);
         int y = (int) Math.floor(coord[1]);
         int z = (int) Math.floor(coord[2]);
-
-        return volume.getVoxel(x, y, z);
+        
+        short res;
+        try {
+            res = volume.getVoxel(x, y, z);
+        } catch(Exception e) {
+            res = 0;
+        }
+        return res;
     }
 
 
     void slicer(double[] viewMatrix) {
 
         // clear image
+   
         for (int j = 0; j < image.getHeight(); j++) {
             for (int i = 0; i < image.getWidth(); i++) {
                 image.setRGB(i, j, 0);
             }
         }
-
+        System.out.println(image.getHeight());
+        System.out.println(image.getWidth());
+        System.out.println(viewMatrix.length);
         // vector uVec and vVec define a plane through the origin, 
         // perpendicular to the view vector viewVec
         double[] viewVec = new double[3];
@@ -113,7 +122,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         VectorMath.setVector(viewVec, viewMatrix[2], viewMatrix[6], viewMatrix[10]);
         VectorMath.setVector(uVec, viewMatrix[0], viewMatrix[4], viewMatrix[8]);
         VectorMath.setVector(vVec, viewMatrix[1], viewMatrix[5], viewMatrix[9]);
-
+        System.out.println(viewMatrix[0]);
         // image is square
         int imageCenter = image.getWidth() / 2;
 
@@ -124,24 +133,38 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         // sample on a plane through the origin of the volume data
         double max = volume.getMaximum();
         TFColor voxelColor = new TFColor();
+        
+        System.out.println( volume.getDimX() );
+        System.out.println( volume.getDimY() );
+        System.out.println( volume.getDimZ() );
+        System.out.println( "Diagonal Depth");
+        System.out.println( volume.getDiagonalDepth() );
 
         
         for (int j = 0; j < image.getHeight(); j++) {
             for (int i = 0; i < image.getWidth(); i++) {
-                pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter)
-                        + volumeCenter[0];
-                pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter)
-                        + volumeCenter[1];
-                pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter)
-                        + volumeCenter[2];
+                
+                int maxIntensity = 0;
+                // Todo: Find entry point and exit point
+                for( int k = 0; k < volume.getDiagonalDepth(); k++){
+                    // Get calculate new volumeCenter
+                    pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter) + viewVec[0] * ( k ) + volumeCenter[0];
+                    pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter) + viewVec[1] * ( k ) + volumeCenter[1];
+                    pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter) + viewVec[2] * ( k ) + volumeCenter[2];
 
-                int val = getVoxel(pixelCoord);
+                    int val = getVoxel(pixelCoord);
+                    if( val > maxIntensity ) {
+                        maxIntensity = val;
+                    }
+                }
+                    
+        
                 
                 // Map the intensity to a grey value by linear scaling
-                voxelColor.r = val/max;
+                voxelColor.r = maxIntensity/max;
                 voxelColor.g = voxelColor.r;
                 voxelColor.b = voxelColor.r;
-                voxelColor.a = val > 0 ? 1.0 : 0.0;  // this makes intensity 0 completely transparent and the rest opaque
+                voxelColor.a = maxIntensity > 0 ? 1.0 : 0.0;  // this makes intensity 0 completely transparent and the rest opaque
                 // Alternatively, apply the transfer function to obtain a color
                 // voxelColor = tFunc.getColor(val);
                 

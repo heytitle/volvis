@@ -28,6 +28,9 @@ public class Volume {
             dimY = reader.getYDim();
             dimZ = reader.getZDim();
             data = reader.getData().clone();
+            
+            diagonalDepth =  (int) Math.ceil( Math.sqrt(Math.pow(dimX,2) + Math.pow(dimY,2)  + Math.pow(dimZ,2)) );
+
             computeHistogram();
         } catch (IOException ex) {
             System.out.println("IO exception");
@@ -79,7 +82,10 @@ public class Volume {
         }
         return maximum;
     }
- 
+    
+    public int getDiagonalDepth() {
+        return diagonalDepth;
+    }
     public int[] getHistogram() {
         return histogram;
     }
@@ -91,7 +97,7 @@ public class Volume {
         }
     }
     
-    private int dimX, dimY, dimZ;
+    private int dimX, dimY, dimZ, diagonalDepth;
     private short[] data;
     private int[] histogram;
 }
