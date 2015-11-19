@@ -17,6 +17,8 @@ import util.VectorMath;
 import volume.GradientVolume;
 import volume.Volume;
 import volume.VoxelGradient;
+import java.util.Arrays;
+import java.util.Collections;
 
 /**
  *
@@ -140,13 +142,39 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         System.out.println( "Diagonal Depth");
         System.out.println( volume.getDiagonalDepth() );
 
+        this.printVector( uVec );
+        this.printVector( vVec );
+        this.printVector( viewVec );
+        
+        int centerImage = (int) Math.floor(volume.getDiagonalDepth()/2);
         
         for (int j = 0; j < image.getHeight(); j++) {
             for (int i = 0; i < image.getWidth(); i++) {
                 
                 int maxIntensity = 0;
                 // Todo: Find entry point and exit point
-                for( int k = 0; k < volume.getDiagonalDepth(); k++){
+                double[] X = new double[3];
+                double[] multiplier = new double[3];
+                multiplier[0]  = volume.getDimX();
+                multiplier[1]  = volume.getDimY();
+                multiplier[2]  = volume.getDimZ();
+                
+                for( int x = 0; x < 3; x++ ){
+                    X[x] = uVec[x] * (i - imageCenter) +  vVec[x] * (j - imageCenter) + viewVec[x] * multiplier[x];
+                }
+                
+                
+                if( i == centerImage && j == centerImage ) {
+                    System.out.print("Depth Candidate : ");
+                    this.printVector(X);
+
+                
+                }
+                
+                int maxDepth = (int) Math.ceil(this.findMax(X));
+                System.out.print("Max depth " + maxDepth );
+                
+                for( int k = 0; k < maxDepth; k++){
                     // Get calculate new volumeCenter
                     pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter) + viewVec[0] * ( k ) + volumeCenter[0];
                     pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter) + viewVec[1] * ( k ) + volumeCenter[1];
@@ -299,6 +327,19 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     private BufferedImage image;
     private double[] viewMatrix = new double[4 * 4];
 
+    public double findMax( double[] v ) {
+        double max = 0;
+        for( int i = 0 ; i < v.length; i++ ) {
+            if( v[i] > max ) {
+                max = v[i];
+            }
+        }
+        return max;
+    }
+    
+    public void printVector( double[] v ) {
+        System.out.println( v[0] + " , " + v[1] + " , " + v[2]);
+    }
     @Override
     public void changed() {
         for (int i=0; i < listeners.size(); i++) {
