@@ -133,10 +133,14 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void mipButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mipButtonActionPerformed
-        JOptionPane.showMessageDialog(this, "Not implemented.");
+
+        this.renderer.setMode(RaycastRenderer.RENDER_MODE.MIP);
+        
     }//GEN-LAST:event_mipButtonActionPerformed
 
     private void slicerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_slicerButtonActionPerformed
+
+        this.renderer.setMode(RaycastRenderer.RENDER_MODE.SLICER);
         
     }//GEN-LAST:event_slicerButtonActionPerformed
 
