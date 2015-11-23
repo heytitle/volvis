@@ -1,5 +1,8 @@
 package util;
 
+import java.util.Arrays;
+import java.util.List;
+
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -17,6 +20,18 @@ public class Utils {
        if(VERBOSE == 1){
            System.out.println(s);
        }
+    }
+    
+    public static void printVector( double[] v ) {
+        String sSep = ",";
+        StringBuilder sbStr = new StringBuilder();
+        for (int i = 0; i < v.length; i++) {
+            if (i > 0) {
+                sbStr.append(sSep);
+            }
+            sbStr.append(""+v[i]);
+        }
+        print(sbStr.toString());
     }
     
     public static double findMax( double[] v ) {
