@@ -14,6 +14,7 @@ import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 import util.TFChangeListener;
 import util.VectorMath;
+import util.Utils;
 import volume.GradientVolume;
 import volume.Volume;
 import volume.VoxelGradient;
@@ -42,7 +43,6 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     
     public void setMode(RENDER_MODE m){
         this.mode = m;
-        this.render();
         this.changed();
     }
     
@@ -176,14 +176,14 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 }
                 
                 
-                if( i == centerImage && j == centerImage ) {
-//                    System.out.print("Depth Candidate : ");
-                    this.printVector(X);
-
+//                if( i == centerImage && j == centerImage ) {
+////                    System.out.print("Depth Candidate : ");
+//                    Utils.printVector(X);
+//
+//
+//                }
                 
-                }
-                
-                int maxDepth = (int) Math.ceil(this.findMax(X));
+                int maxDepth = (int) Math.ceil(Utils.findMax(X));
                 //System.out.println("Max depth " + maxDepth );
                 
                 for( int k = 0; k < maxDepth; k++){
@@ -400,19 +400,6 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     private BufferedImage image;
     private double[] viewMatrix = new double[4 * 4];
 
-    public double findMax( double[] v ) {
-        double max = 0;
-        for( int i = 0 ; i < v.length; i++ ) {
-            if( v[i] > max ) {
-                max = v[i];
-            }
-        }
-        return max;
-    }
-    
-    public void printVector( double[] v ) {
-        System.out.println( v[0] + " , " + v[1] + " , " + v[2]);
-    }
     @Override
     public void changed() {
         for (int i=0; i < listeners.size(); i++) {
@@ -425,9 +412,10 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         switch(this.mode){
             case MIP:
                 this.mip();
-            default:
+                break;
+            case SLICER:
                 this.slicer();
-                
+                break;
         }
         
     }
