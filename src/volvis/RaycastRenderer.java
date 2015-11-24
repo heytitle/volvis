@@ -10,6 +10,8 @@ import gui.RaycastRendererPanel;
 import gui.TransferFunction2DEditor;
 import gui.TransferFunctionEditor;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 import util.TFChangeListener;
@@ -20,6 +22,9 @@ import volume.Volume;
 import volume.VoxelGradient;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.imageio.ImageIO;
 
 /**
  *
@@ -33,6 +38,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     TransferFunction tFunc;
     TransferFunctionEditor tfEditor;
     TransferFunction2DEditor tfEditor2D;
+    
+    private boolean triLinearInterpolation = true;
     
     public enum RENDER_MODE {
         SLICER, MIP, COMPOSITING
@@ -51,6 +58,11 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         panel.setSpeedLabel("0");
     }
 
+    public void toggleTriLinear() {
+        this.triLinearInterpolation = !this.triLinearInterpolation;
+        Utils.print("Toggle Tri-linear Interpolation : " + this.triLinearInterpolation );
+    }
+    
     public void setVolume(Volume vol) {
         System.out.println("Assigning volume");
         volume = vol;
@@ -481,6 +493,13 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         if (gl.glGetError() > 0) {
             System.out.println("some OpenGL error: " + gl.glGetError());
         }
+        
+//        try {
+//            ImageIO.write(image,"png",new File("MyFile.png"));
+//        } catch (IOException ex) {
+//            Logger.getLogger(RaycastRenderer.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+
 
     }
     private BufferedImage image;
