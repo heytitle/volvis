@@ -347,8 +347,9 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         for (int j = 0; j < image.getHeight(); j++) {
             for (int i = 0; i < image.getWidth(); i++) {
                 // Map the intensity to a grey value by linear scaling
-                short intensity = sumIntensity[i][j];
-                voxelColor.r = sumIntensity[i][j]/maxSumIntensity;
+                double intensity = sumIntensity[i][j];
+
+                voxelColor.r = intensity/maxSumIntensity;
                 voxelColor.g = voxelColor.r;
                 voxelColor.b = voxelColor.r;
                 voxelColor.a = intensity > 0 ? 1.0 : 0.0;  // this makes intensity 0 completely transparent and the rest opaque
