@@ -10,8 +10,6 @@ import gui.RaycastRendererPanel;
 import gui.TransferFunction2DEditor;
 import gui.TransferFunctionEditor;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 import util.TFChangeListener;
@@ -19,12 +17,6 @@ import util.VectorMath;
 import util.Utils;
 import volume.GradientVolume;
 import volume.Volume;
-import volume.VoxelGradient;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.imageio.ImageIO;
 
 /**
  *
@@ -38,8 +30,6 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     TransferFunction tFunc;
     TransferFunctionEditor tfEditor;
     TransferFunction2DEditor tfEditor2D;
-    
-    private boolean triLinearInterpolation = true;
     
     public enum RENDER_MODE {
         SLICER, MIP, COMPOSITING
@@ -58,11 +48,6 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         panel.setSpeedLabel("0");
     }
 
-    public void toggleTriLinear() {
-        this.triLinearInterpolation = !this.triLinearInterpolation;
-        Utils.print("Toggle Tri-linear Interpolation : " + this.triLinearInterpolation );
-    }
-    
     public void setVolume(Volume vol) {
         System.out.println("Assigning volume");
         volume = vol;
@@ -159,59 +144,43 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         // sample on a plane through the origin of the volume data
         double max = volume.getMaximum();
         TFColor voxelColor = new TFColor();
-        
-//        System.out.println( volume.getDimX() );
-//        System.out.println( volume.getDimY() );
-//        System.out.println( volume.getDimZ() );
-//        System.out.println( "Diagonal Depth");
-//        System.out.println( volume.getDiagonalDepth() );
-
-//        this.printVector( uVec );
-//        this.printVector( vVec );
-//        this.printVector( viewVec );
-        
-//        int centerImage = (int) Math.floor(volume.getDiagonalDepth()/2);
-        
+         
         for (int j = 0; j < image.getHeight(); j++) {
             for (int i = 0; i < image.getWidth(); i++) {
                 
                 int maxIntensity = 0;
-                // Todo: Find entry point and exit point
-                double[] X = new double[3];
-                double[] multiplier = new double[3];
-                multiplier[0]  = volume.getDimX();
-                multiplier[1]  = volume.getDimY();
-                multiplier[2]  = volume.getDimZ();
-                
-                for( int x = 0; x < 3; x++ ){
-                    X[x] = uVec[x] * (i - imageCenter) +  vVec[x] * (j - imageCenter) + viewVec[x] * multiplier[x];
-                }
-                
-                
-//                if( i == centerImage && j == centerImage ) {
-////                    System.out.print("Depth Candidate : ");
-//                    Utils.printVector(X);
-//
-//
-//                }
-                
-                int maxDepth = (int) Math.ceil(Utils.findMax(X));
-                //System.out.println("Max depth " + maxDepth );
-                
-                for( int k = 0; k < maxDepth; k++){
-                    // Get calculate new volumeCenter
-                    pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter) + viewVec[0] * ( k ) + volumeCenter[0];
-                    pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter) + viewVec[1] * ( k ) + volumeCenter[1];
-                    pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter) + viewVec[2] * ( k ) + volumeCenter[2];
-
-                    int val = getVoxel(pixelCoord);
-                    if( val > maxIntensity ) {
-                        maxIntensity = val;
+                int kStart= 0,kEnd =0;
+                int[] kRange = new int[2];                                                             
+                RayCastingCubeIntersection obj = new RayCastingCubeIntersection(volume, imageCenter,viewVec,uVec,vVec,volumeCenter);
+                /*List<Integer> kList = obj.findIntersectionParameters(i,j);
+                if(kList != null){
+                    if(kList.size()==1){
+                        kList.add(kList.get(0));
                     }
-                }
-                    
-        
-                
+                    kStart = kList.get(0) < kList.get(1) ? kList.get(0) : kList.get(1);
+                    kEnd = kList.get(0) < kList.get(1) ? kList.get(1) : kList.get(0);
+                }*/
+                kRange = optimalMIPApproach(imageCenter, viewVec, uVec,vVec,i,j);
+                //kRange = bruteForceMIPApproach(volume);
+                if(kRange!= null && kRange[0]!= kRange[1]){
+                    kStart = kRange[0];
+                    kEnd = kRange[1];
+                }                            
+                if(kStart==kEnd) maxIntensity = 0;
+                else{ 
+                    //System.out.println(kStart+"::"+kEnd);
+                    for( int k = kStart; k <= kEnd; k++){
+                        // Get calculate new volumeCenter
+                        pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter) + viewVec[0] * ( k ) + volumeCenter[0];
+                        pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter) + viewVec[1] * ( k ) + volumeCenter[1];
+                        pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter) + viewVec[2] * ( k ) + volumeCenter[2];
+
+                        int val = getVoxel(pixelCoord);
+                        if( val > maxIntensity ) {
+                            maxIntensity = val;
+                        }
+                    }
+                }     
                 // Map the intensity to a grey value by linear scaling
                 voxelColor.r = maxIntensity/max;
                 voxelColor.g = voxelColor.r;
@@ -493,13 +462,6 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         if (gl.glGetError() > 0) {
             System.out.println("some OpenGL error: " + gl.glGetError());
         }
-        
-//        try {
-//            ImageIO.write(image,"png",new File("MyFile.png"));
-//        } catch (IOException ex) {
-//            Logger.getLogger(RaycastRenderer.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-
 
     }
     private BufferedImage image;
@@ -513,7 +475,6 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     }
 
     public void render(){
-        System.out.println("Render by using : " +this.mode);
         switch(this.mode){
             case MIP:
                 this.mip();
@@ -526,6 +487,72 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 break;
         }
         
+    }
+    
+    private int[] optimalMIPApproach(int imageCenter, double[] viewVec, double[] uVec, double[] vVec, int i, int j) {
+        int kStart = Integer.MIN_VALUE;
+        int kEnd = Integer.MAX_VALUE;
+        double[] pixelCoord = new double[3];
+        //set vloume dimensions volume[x,y,z][low,high] = vloume[0,1,2][0,1]
+            int[][] volumeBoundary = new int[3][2];
+            volumeBoundary[0][0] = -volume.getDimX()/2;
+            volumeBoundary[0][1] = volume.getDimX()/2;
+            volumeBoundary[1][0] = -volume.getDimY()/2;
+            volumeBoundary[1][1] = volume.getDimY()/2;
+            volumeBoundary[2][0] = -volume.getDimZ()/2;
+            volumeBoundary[2][1] = volume.getDimZ()/2;
+
+            //origin[x,y,z]
+            double[] origin = new double[3];  
+
+            boolean intersect = true;
+
+            int[] kList = new int[2];
+
+            for (int l = 0; l < 3; l++) {
+
+                //set origin  origin[x,y,z] = origin[0,1,2]
+                origin[l] = (i-imageCenter) * uVec[l] + (j-imageCenter) * vVec[l];
+
+                //if origin not between the slabs then return
+                if(viewVec[l]==0){
+                    if( (origin[l]<volumeBoundary[l][0] || origin[l]>volumeBoundary[l][1]) ){
+                       intersect=false;
+                       return null;
+                    }
+                }else{
+
+                    //for each dimension find kLow/kHigh . k[x,y,z][low,high] : k[0,1,2][0,1]
+                    kList[0] = (int) ((volumeBoundary[l][0] - origin[l]) / viewVec[l]);
+                    kList[1] = (int) ((volumeBoundary[l][1] - origin[l]) / viewVec[l]);
+
+                    // if kLow > kHigh, swap
+                    if (kList[0] > kList[1]) {
+                        int tmp = kList[0];
+                        kList[0] = kList[1];
+                        kList[1] = tmp;
+                    }
+                    //if kLow > kStart , kStart = kLow
+                    if (kList[0] > kStart) {
+                        kStart = kList[0];
+                    }
+                    //if kHigh < kEnd , kEnd = kHigh
+                    if (kList[1] < kEnd) {
+                        kEnd = kList[1];
+                    }
+                    //
+                    if (kStart > kEnd || kEnd < 0) {
+                        intersect = false;
+                        return null;
+                    }
+                }
+            }
+            return new int[]{kStart,kEnd};
+            
+    }
+    
+     private int[] bruteForceMIPApproach(Volume volume) {        
+            return new int[]{0,volume.getDiagonalDepth()};      
     }
 
 }
