@@ -49,6 +49,7 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
         shadingCheckbox = new javax.swing.JCheckBox();
         triLinearCheckbox = new javax.swing.JCheckBox();
         planeIntersection = new javax.swing.JCheckBox();
+        lowerResolution = new javax.swing.JCheckBox();
 
         jLabel1.setText("Rendering time (ms):");
 
@@ -110,6 +111,14 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
             }
         });
 
+        lowerResolution.setSelected(true);
+        lowerResolution.setText("Lower resolution when rotating");
+        lowerResolution.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                lowerResolutionActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -128,8 +137,9 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
                         .addComponent(slicerButton)
                         .addComponent(shadingCheckbox)
                         .addComponent(triLinearCheckbox)
-                        .addComponent(planeIntersection)))
-                .addContainerGap(339, Short.MAX_VALUE))
+                        .addComponent(planeIntersection)
+                        .addComponent(lowerResolution)))
+                .addContainerGap(292, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -152,7 +162,9 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
                 .addComponent(triLinearCheckbox)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(planeIntersection)
-                .addContainerGap(79, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(lowerResolution)
+                .addContainerGap(50, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -191,10 +203,16 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
         this.renderer.togglePlaneIntersectionMode();
     }//GEN-LAST:event_planeIntersectionActionPerformed
 
+    private void lowerResolutionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lowerResolutionActionPerformed
+        // TODO add your handling code here:
+        this.renderer.toggleLowerResolution();
+    }//GEN-LAST:event_lowerResolutionActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JRadioButton compositingButton;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JCheckBox lowerResolution;
     private javax.swing.JRadioButton mipButton;
     private javax.swing.JCheckBox planeIntersection;
     private javax.swing.JLabel renderingSpeedLabel;

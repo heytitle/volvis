@@ -33,6 +33,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
 
     private boolean triLinearInterpolation = true;
     private boolean planeIntersection = true;
+    private boolean lowerResolution   = true;
 
     
     public enum RENDER_MODE {
@@ -146,9 +147,10 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         double max = volume.getMaximum();
         TFColor voxelColor = new TFColor();
 
-        int[] kRange = new int[2];                                                             
-        for (int j = 0; j < image.getHeight(); j++) {
-            for (int i = 0; i < image.getWidth(); i++) {
+        int[] kRange = new int[2];                                           
+        Utils.print( "> Start " + this.step()/2 );
+        for (int j = this.step()/2; j < image.getHeight(); j+= this.step()) {
+            for (int i = this.step()/2; i < image.getWidth(); i+= this.step()) {
                 
                 int maxIntensity = 0;
 //                RayCastingCubeIntersection obj = new RayCastingCubeIntersection(volume, imageCenter,viewVec,uVec,vVec,volumeCenter);
@@ -189,6 +191,9 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 int c_blue = voxelColor.b <= 1.0 ? (int) Math.floor(voxelColor.b * 255) : 255;
                 int pixelColor = (c_alpha << 24) | (c_red << 16) | (c_green << 8) | c_blue;
                 image.setRGB(i, j, pixelColor);
+                if( this.step() > 1 ) {
+                    image.setRGB(i-1,j-1, pixelColor );
+                }
             }
         }
     }
@@ -223,8 +228,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         TFColor voxelColor = new TFColor();
 
         
-        for (int j = 0; j < image.getHeight(); j++) {
-            for (int i = 0; i < image.getWidth(); i++) {
+        for (int j = 0; j < image.getHeight(); j+= this.step()) {
+            for (int i = 0; i < image.getWidth(); i+= this.step()) {
                 pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter)
                         + volumeCenter[0];
                 pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter)
@@ -464,7 +469,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     }
 
     public void render(){
-        Utils.print( "Render Mode : " + this.mode );
+        Utils.print( "Render Mode : " + this.mode + " with step " + this.step() );
         long startTime = System.currentTimeMillis();
 
         switch(this.mode){
@@ -547,6 +552,12 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         return new int[]{kStart,kEnd};
             
     }
+    private int step(){ 
+        if( this.interactiveMode && this.lowerResolution ){
+            return 2;
+        }
+        return 1;
+    }
      
     public void toggleTriLinear() {
         this.triLinearInterpolation = !this.triLinearInterpolation;
@@ -557,5 +568,12 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         this.planeIntersection = !this.planeIntersection;
         this.render();
         Utils.print("Toggle Plane Intersection : " + this.planeIntersection );
+    }
+    
+    public void toggleLowerResolution(){
+        this.lowerResolution = !this.lowerResolution;
+        this.render();
+        Utils.print("Toggle Lower Resolution : " + this.lowerResolution );
+
     }
 }
