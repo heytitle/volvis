@@ -142,7 +142,6 @@
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="shadingCheckboxActionPerformed"/>
       </Events>
     </Component>
-<<<<<<< HEAD
     <Component class="javax.swing.JCheckBox" name="triLinearCheckbox">
       <Properties>
         <Property name="text" type="java.lang.String" value="Tri-linear Interpolation"/>
@@ -150,14 +149,6 @@
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="triLinearCheckboxActionPerformed"/>
-=======
-    <Component class="javax.swing.JRadioButton" name="jRadioButton1">
-      <Properties>
-        <Property name="text" type="java.lang.String" value="MIP_Optimal"/>
-      </Properties>
-      <Events>
-        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jRadioButton1ActionPerformed"/>
->>>>>>> origin/akash
       </Events>
     </Component>
   </SubComponents>
