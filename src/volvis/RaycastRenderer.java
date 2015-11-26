@@ -414,14 +414,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         drawBoundingBox(gl);
 
         gl.glGetDoublev(GL2.GL_MODELVIEW_MATRIX, viewMatrix, 0);
-
-        long startTime = System.currentTimeMillis();
      
-        this.render();
-        
-        long endTime = System.currentTimeMillis();
-        double runningTime = (endTime - startTime);
-        panel.setSpeedLabel(Double.toString(runningTime));
+        this.render();        
 
         Texture texture = AWTTextureIO.newTexture(gl.getGLProfile(), image, false);
 
@@ -471,7 +465,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
 
     public void render(){
         Utils.print( "Render Mode : " + this.mode );
-        
+        long startTime = System.currentTimeMillis();
+
         switch(this.mode){
             case MIP:
                 this.mip();
@@ -483,6 +478,10 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 this.compositing();
                 break;
         }
+        
+        long endTime = System.currentTimeMillis();
+        double runningTime = (endTime - startTime);
+        panel.setSpeedLabel(Double.toString(runningTime));
         
     }
     
@@ -556,6 +555,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
 
     public void togglePlaneIntersectionMode() {
         this.planeIntersection = !this.planeIntersection;
+        this.render();
         Utils.print("Toggle Plane Intersection : " + this.planeIntersection );
     }
 }
