@@ -30,6 +30,9 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     TransferFunction tFunc;
     TransferFunctionEditor tfEditor;
     TransferFunction2DEditor tfEditor2D;
+
+    private boolean triLinearInterpolation = true;
+
     
     public enum RENDER_MODE {
         SLICER, MIP, COMPOSITING
@@ -554,5 +557,11 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
      private int[] bruteForceMIPApproach(Volume volume) {        
             return new int[]{0,volume.getDiagonalDepth()};      
     }
+     
+     public void toggleTriLinear() {
+        this.triLinearInterpolation = !this.triLinearInterpolation;
+        Utils.print("Toggle Tri-linear Interpolation : " + this.triLinearInterpolation );
+    }
+
 
 }
