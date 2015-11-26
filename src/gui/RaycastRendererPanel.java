@@ -48,6 +48,7 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
         tf2dButton = new javax.swing.JRadioButton();
         shadingCheckbox = new javax.swing.JCheckBox();
         triLinearCheckbox = new javax.swing.JCheckBox();
+        planeIntersection = new javax.swing.JCheckBox();
 
         jLabel1.setText("Rendering time (ms):");
 
@@ -101,6 +102,14 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
             }
         });
 
+        planeIntersection.setSelected(true);
+        planeIntersection.setText("Plane Intersection");
+        planeIntersection.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                planeIntersectionActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -118,7 +127,8 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
                         .addComponent(mipButton)
                         .addComponent(slicerButton)
                         .addComponent(shadingCheckbox)
-                        .addComponent(triLinearCheckbox)))
+                        .addComponent(triLinearCheckbox)
+                        .addComponent(planeIntersection)))
                 .addContainerGap(339, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -140,7 +150,9 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
                 .addComponent(shadingCheckbox)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(triLinearCheckbox)
-                .addContainerGap(108, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(planeIntersection)
+                .addContainerGap(79, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -174,11 +186,17 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
         this.renderer.toggleTriLinear();
     }//GEN-LAST:event_triLinearCheckboxActionPerformed
 
+    private void planeIntersectionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_planeIntersectionActionPerformed
+
+        this.renderer.togglePlaneIntersectionMode();
+    }//GEN-LAST:event_planeIntersectionActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JRadioButton compositingButton;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JRadioButton mipButton;
+    private javax.swing.JCheckBox planeIntersection;
     private javax.swing.JLabel renderingSpeedLabel;
     private javax.swing.JCheckBox shadingCheckbox;
     private javax.swing.JRadioButton slicerButton;

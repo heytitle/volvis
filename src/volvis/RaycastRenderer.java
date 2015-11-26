@@ -32,12 +32,12 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     TransferFunction2DEditor tfEditor2D;
 
     private boolean triLinearInterpolation = true;
+    private boolean planeIntersection = true;
 
     
     public enum RENDER_MODE {
         SLICER, MIP, COMPOSITING
     }
-
     
     private RENDER_MODE mode = RENDER_MODE.SLICER;
     
@@ -490,68 +490,72 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         int kStart = Integer.MIN_VALUE;
         int kEnd = Integer.MAX_VALUE;
         double[] pixelCoord = new double[3];
+        
+        if( !this.planeIntersection ) {
+            return new int[]{0,volume.getDiagonalDepth()};
+        }
+        
         //set vloume dimensions volume[x,y,z][low,high] = vloume[0,1,2][0,1]
-            int[][] volumeBoundary = new int[3][2];
-            volumeBoundary[0][0] = -volume.getDimX()/2;
-            volumeBoundary[0][1] = volume.getDimX()/2;
-            volumeBoundary[1][0] = -volume.getDimY()/2;
-            volumeBoundary[1][1] = volume.getDimY()/2;
-            volumeBoundary[2][0] = -volume.getDimZ()/2;
-            volumeBoundary[2][1] = volume.getDimZ()/2;
+        int[][] volumeBoundary = new int[3][2];
+        volumeBoundary[0][0] = -volume.getDimX()/2;
+        volumeBoundary[0][1] = volume.getDimX()/2;
+        volumeBoundary[1][0] = -volume.getDimY()/2;
+        volumeBoundary[1][1] = volume.getDimY()/2;
+        volumeBoundary[2][0] = -volume.getDimZ()/2;
+        volumeBoundary[2][1] = volume.getDimZ()/2;
 
-            //origin[x,y,z]
-            double[] origin = new double[3];  
+        //origin[x,y,z]
+        double[] origin = new double[3];  
 
-            int[] kList = new int[2];
+        int[] kList = new int[2];
 
-            for (int l = 0; l < 3; l++) {
+        for (int l = 0; l < 3; l++) {
 
-                //set origin  origin[x,y,z] = origin[0,1,2]
-                origin[l] = (i-imageCenter) * uVec[l] + (j-imageCenter) * vVec[l];
+            //set origin  origin[x,y,z] = origin[0,1,2]
+            origin[l] = (i-imageCenter) * uVec[l] + (j-imageCenter) * vVec[l];
 
-                //if origin not between the slabs then return
-                if(viewVec[l]==0){
-                    if( (origin[l]<volumeBoundary[l][0] || origin[l]>volumeBoundary[l][1]) ){
-                       return new int[]{0,0};
-                    }
-                }else{
+            //if origin not between the slabs then return
+            if(viewVec[l]==0){
+                if( (origin[l]<volumeBoundary[l][0] || origin[l]>volumeBoundary[l][1]) ){
+                   return new int[]{0,0};
+                }
+            }else{
 
-                    //for each dimension find kLow/kHigh . k[x,y,z][low,high] : k[0,1,2][0,1]
-                    kList[0] = (int) ((volumeBoundary[l][0] - origin[l]) / viewVec[l]);
-                    kList[1] = (int) ((volumeBoundary[l][1] - origin[l]) / viewVec[l]);
+                //for each dimension find kLow/kHigh . k[x,y,z][low,high] : k[0,1,2][0,1]
+                kList[0] = (int) ((volumeBoundary[l][0] - origin[l]) / viewVec[l]);
+                kList[1] = (int) ((volumeBoundary[l][1] - origin[l]) / viewVec[l]);
 
-                    // if kLow > kHigh, swap
-                    if (kList[0] > kList[1]) {
-                        int tmp = kList[0];
-                        kList[0] = kList[1];
-                        kList[1] = tmp;
-                    }
-                    //if kLow > kStart , kStart = kLow
-                    if (kList[0] > kStart) {
-                        kStart = kList[0];
-                    }
-                    //if kHigh < kEnd , kEnd = kHigh
-                    if (kList[1] < kEnd) {
-                        kEnd = kList[1];
-                    }
-                    //
-                    if (kStart > kEnd || kEnd < 0) {
-                       return new int[]{0,0};
-                    }
+                // if kLow > kHigh, swap
+                if (kList[0] > kList[1]) {
+                    int tmp = kList[0];
+                    kList[0] = kList[1];
+                    kList[1] = tmp;
+                }
+                //if kLow > kStart , kStart = kLow
+                if (kList[0] > kStart) {
+                    kStart = kList[0];
+                }
+                //if kHigh < kEnd , kEnd = kHigh
+                if (kList[1] < kEnd) {
+                    kEnd = kList[1];
+                }
+                //
+                if (kStart > kEnd || kEnd < 0) {
+                   return new int[]{0,0};
                 }
             }
-            return new int[]{kStart,kEnd};
+        }
+        return new int[]{kStart,kEnd};
             
     }
-    
-     private int[] bruteForceMIPApproach(Volume volume) {        
-            return new int[]{0,volume.getDiagonalDepth()};      
-    }
      
-     public void toggleTriLinear() {
+    public void toggleTriLinear() {
         this.triLinearInterpolation = !this.triLinearInterpolation;
         Utils.print("Toggle Tri-linear Interpolation : " + this.triLinearInterpolation );
     }
 
-
+    public void togglePlaneIntersectionMode() {
+        this.planeIntersection = !this.planeIntersection;
+        Utils.print("Toggle Plane Intersection : " + this.planeIntersection );
+    }
 }

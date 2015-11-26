@@ -35,6 +35,7 @@
                       <Component id="slicerButton" alignment="0" min="-2" max="-2" attributes="0"/>
                       <Component id="shadingCheckbox" alignment="0" min="-2" max="-2" attributes="0"/>
                       <Component id="triLinearCheckbox" alignment="0" min="-2" max="-2" attributes="0"/>
+                      <Component id="planeIntersection" alignment="0" min="-2" max="-2" attributes="0"/>
                   </Group>
               </Group>
               <EmptySpace pref="339" max="32767" attributes="0"/>
@@ -61,7 +62,9 @@
               <Component id="shadingCheckbox" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
               <Component id="triLinearCheckbox" min="-2" max="-2" attributes="0"/>
-              <EmptySpace pref="108" max="32767" attributes="0"/>
+              <EmptySpace max="-2" attributes="0"/>
+              <Component id="planeIntersection" min="-2" max="-2" attributes="0"/>
+              <EmptySpace pref="79" max="32767" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -137,6 +140,15 @@
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="triLinearCheckboxActionPerformed"/>
+      </Events>
+    </Component>
+    <Component class="javax.swing.JCheckBox" name="planeIntersection">
+      <Properties>
+        <Property name="selected" type="boolean" value="true"/>
+        <Property name="text" type="java.lang.String" value="Plane Intersection"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="planeIntersectionActionPerformed"/>
       </Events>
     </Component>
   </SubComponents>
