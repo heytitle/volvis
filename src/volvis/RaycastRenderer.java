@@ -118,8 +118,6 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
 
     void mip(){
 
-//        System.out.println("Render : MIP");
-
         for (int j = 0; j < image.getHeight(); j++) {
             for (int i = 0; i < image.getWidth(); i++) {
                 image.setRGB(i, j, 0);
@@ -147,43 +145,34 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         // sample on a plane through the origin of the volume data
         double max = volume.getMaximum();
         TFColor voxelColor = new TFColor();
-         
+
+        int[] kRange = new int[2];                                                             
         for (int j = 0; j < image.getHeight(); j++) {
             for (int i = 0; i < image.getWidth(); i++) {
                 
                 int maxIntensity = 0;
-                int kStart= 0,kEnd =0;
-                int[] kRange = new int[2];                                                             
-                RayCastingCubeIntersection obj = new RayCastingCubeIntersection(volume, imageCenter,viewVec,uVec,vVec,volumeCenter);
-                /*List<Integer> kList = obj.findIntersectionParameters(i,j);
-                if(kList != null){
-                    if(kList.size()==1){
-                        kList.add(kList.get(0));
-                    }
-                    kStart = kList.get(0) < kList.get(1) ? kList.get(0) : kList.get(1);
-                    kEnd = kList.get(0) < kList.get(1) ? kList.get(1) : kList.get(0);
-                }*/
-                kRange = optimalMIPApproach(imageCenter, viewVec, uVec,vVec,i,j);
-                //kRange = bruteForceMIPApproach(volume);
-                if(kRange!= null && kRange[0]!= kRange[1]){
-                    kStart = kRange[0];
-                    kEnd = kRange[1];
-                }                            
-                if(kStart==kEnd) maxIntensity = 0;
-                else{ 
-                    //System.out.println(kStart+"::"+kEnd);
-                    for( int k = kStart; k <= kEnd; k++){
-                        // Get calculate new volumeCenter
-                        pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter) + viewVec[0] * ( k ) + volumeCenter[0];
-                        pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter) + viewVec[1] * ( k ) + volumeCenter[1];
-                        pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter) + viewVec[2] * ( k ) + volumeCenter[2];
+//                RayCastingCubeIntersection obj = new RayCastingCubeIntersection(volume, imageCenter,viewVec,uVec,vVec,volumeCenter);
+//                /*List<Integer> kList = obj.findIntersectionParameters(i,j);
+//                if(kList != null){
+//                    if(kList.size()==1){
+//                        kList.add(kList.get(0));
+//                    }
+//                    kStart = kList.get(0) < kList.get(1) ? kList.get(0) : kList.get(1);
+//                    kEnd = kList.get(0) < kList.get(1) ? kList.get(1) : kList.get(0);
+//                }*/
+                kRange = optimalDepth(imageCenter, viewVec, uVec,vVec,i,j);                
+                for (int k = kRange[0]; k < kRange[1]; k++) {
+                    // Get calculate new volumeCenter
+                    pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter) + viewVec[0] * (k) + volumeCenter[0];
+                    pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter) + viewVec[1] * (k) + volumeCenter[1];
+                    pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter) + viewVec[2] * (k) + volumeCenter[2];
 
-                        int val = getVoxel(pixelCoord);
-                        if( val > maxIntensity ) {
-                            maxIntensity = val;
-                        }
+                    int val = getVoxel(pixelCoord);
+                    if (val > maxIntensity) {
+                        maxIntensity = val;
                     }
-                }     
+                }
+
                 // Map the intensity to a grey value by linear scaling
                 voxelColor.r = maxIntensity/max;
                 voxelColor.g = voxelColor.r;
@@ -294,6 +283,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         
         short[][] sumIntensity = new short[image.getHeight()][image.getWidth()];
         short  maxSumIntensity = 0;
+        int[] kRange = new int[2];                                                             
+
         for (int j = 0; j < image.getHeight(); j++) {
             for (int i = 0; i < image.getWidth(); i++) {
                 sumIntensity[i][j] = 0;
@@ -311,8 +302,9 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 }
                 int maxDepth = (int) Math.ceil(Utils.findMax(X));
                 // End
-                
-                for( int k = 0; k < maxDepth; k++){
+                kRange = optimalDepth(imageCenter, viewVec, uVec,vVec,i,j);
+
+                for (int k = kRange[0]; k < kRange[1]; k++) {
                     // Get calculate new volumeCenter
                     pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter) + viewVec[0] * ( k ) + volumeCenter[0];
                     pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter) + viewVec[1] * ( k ) + volumeCenter[1];
@@ -478,6 +470,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     }
 
     public void render(){
+        Utils.print( "Render Mode : " + this.mode );
+        
         switch(this.mode){
             case MIP:
                 this.mip();
@@ -492,7 +486,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         
     }
     
-    private int[] optimalMIPApproach(int imageCenter, double[] viewVec, double[] uVec, double[] vVec, int i, int j) {
+    private int[] optimalDepth(int imageCenter, double[] viewVec, double[] uVec, double[] vVec, int i, int j) {
         int kStart = Integer.MIN_VALUE;
         int kEnd = Integer.MAX_VALUE;
         double[] pixelCoord = new double[3];
@@ -508,8 +502,6 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
             //origin[x,y,z]
             double[] origin = new double[3];  
 
-            boolean intersect = true;
-
             int[] kList = new int[2];
 
             for (int l = 0; l < 3; l++) {
@@ -520,8 +512,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 //if origin not between the slabs then return
                 if(viewVec[l]==0){
                     if( (origin[l]<volumeBoundary[l][0] || origin[l]>volumeBoundary[l][1]) ){
-                       intersect=false;
-                       return null;
+                       return new int[]{0,0};
                     }
                 }else{
 
@@ -545,8 +536,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                     }
                     //
                     if (kStart > kEnd || kEnd < 0) {
-                        intersect = false;
-                        return null;
+                       return new int[]{0,0};
                     }
                 }
             }
