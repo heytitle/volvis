@@ -22,6 +22,17 @@ public class Utils {
        }
     }
     
+      public static void printVector( long[] v ) {
+        String sSep = ",";
+        StringBuilder sbStr = new StringBuilder();
+        for (int i = 0; i < v.length; i++) {
+            if (i > 0) {
+                sbStr.append(sSep);
+            }
+            sbStr.append(""+v[i]);
+        }
+        print(sbStr.toString());
+    }
     public static void printVector( double[] v ) {
         String sSep = ",";
         StringBuilder sbStr = new StringBuilder();
@@ -33,7 +44,17 @@ public class Utils {
         }
         print(sbStr.toString());
     }
-    
+      public static void printVector( int[] v ) {
+        String sSep = ",";
+        StringBuilder sbStr = new StringBuilder();
+        for (int i = 0; i < v.length; i++) {
+            if (i > 0) {
+                sbStr.append(sSep);
+            }
+            sbStr.append(""+v[i]);
+        }
+        print(sbStr.toString());
+    }
     public static double findMax( double[] v ) {
         double max = 0;
         for( int i = 0 ; i < v.length; i++ ) {

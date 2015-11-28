@@ -10,6 +10,11 @@ import gui.RaycastRendererPanel;
 import gui.TransferFunction2DEditor;
 import gui.TransferFunctionEditor;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.imageio.ImageIO;
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 import util.TFChangeListener;
@@ -148,7 +153,6 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         TFColor voxelColor = new TFColor();
 
         int[] kRange = new int[2];                                           
-        Utils.print( "> Start " + this.step()/2 );
         for (int j = this.step()/2; j < image.getHeight(); j+= this.step()) {
             for (int i = this.step()/2; i < image.getWidth(); i+= this.step()) {
                 
@@ -183,20 +187,61 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 // Alternatively, apply the transfer function to obtain a color
                 // voxelColor = tFunc.getColor(val);
                 
+  
+                long pixelColor = this.pixelColor(voxelColor);
+                image.setRGB(i, j, (int) pixelColor);
                 
-                // BufferedImage expects a pixel color packed as ARGB in an int
-                int c_alpha = voxelColor.a <= 1.0 ? (int) Math.floor(voxelColor.a * 255) : 255;
-                int c_red = voxelColor.r <= 1.0 ? (int) Math.floor(voxelColor.r * 255) : 255;
-                int c_green = voxelColor.g <= 1.0 ? (int) Math.floor(voxelColor.g * 255) : 255;
-                int c_blue = voxelColor.b <= 1.0 ? (int) Math.floor(voxelColor.b * 255) : 255;
-                int pixelColor = (c_alpha << 24) | (c_red << 16) | (c_green << 8) | c_blue;
-                image.setRGB(i, j, pixelColor);
-                if( this.step() > 1 ) {
-                    image.setRGB(i-1,j-1, pixelColor );
+                /* Low Resolution Rendering */
+                if( this.step() > 1  ) {
+                    long[] colorIJ = this.colorArray( pixelColor );
+                    for( int ni = -1 ; ni < this.step() && (ni + i) < image.getWidth() ; ni++ ){
+                        for( int nj = -1; nj < this.step() && (nj + j) < image.getHeight() ; nj++ ) {
+                            if( ni == 0 && nj==0 ){
+                                continue;
+                            }
+                            int dominator = 2;
+                            
+                            /* TODO: for corner pixels, dominator should be 1
+                                Top Left : points (0,0), (0,1), (1,0)
+                                Top Right, Left : Bottom Left, Bottom Right
+                            */
+                            /* Get color from the pixel if possible ( from previous neighbor ) */
+                            long[] color = this.colorArray( image.getRGB( i+ni, j+nj) );
+                            if( (ni+1) % this.step() == 0 && (nj+1) % this.step() == 0 ){
+                                dominator = 4;
+                            }
+                            for( int nc = 0; nc < 4; nc++ ) {
+                                color[nc] += (colorIJ[nc]/dominator);
+                                if( nc==0 ){
+                                    color[nc] = color[nc] > 0 ? 255 : 0;
+                                }
+                            } 
+                            image.setRGB( i+ni,j+nj, (int)this.binaryColor(color) );
+
+                        }
+                    }
+                    
                 }
             }
         }
     }
+    
+    public long pixelColor( TFColor v ){
+        int c_alpha = v.a <= 1.0 ? (int) Math.floor(v.a * 255) : 255;
+        int c_red = v.r <= 1.0 ? (int) Math.floor(v.r * 255) : 255;
+        int c_green = v.g <= 1.0 ? (int) Math.floor(v.g * 255) : 255;
+        int c_blue = v.b <= 1.0 ? (int) Math.floor(v.b * 255) : 255;
+        return this.binaryColor( new long[] {c_alpha,c_red,c_green,c_blue } );
+    } 
+    
+    public long binaryColor( long[] rgba ){
+        return ( rgba[0] << 24) | ( rgba[1] << 16) | ( rgba[2] << 8) | rgba[3];
+    }
+    
+    public long[] colorArray( long c ){ 
+        return new long[]{ ( (c & 0xff000000) >> 24 ) , ( (c & 0x00ff0000) >> 16 ), ( (c & 0x0000ff00) >> 8 ), ( c & 0x000000ff ) };
+    }
+   
     
     void slicer() {
 
@@ -451,6 +496,12 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         gl.glPopMatrix();
 
         gl.glPopAttrib();
+//        try {
+//            File outputfile = new File("MyFile.png");
+//            ImageIO.write( image, "png", outputfile);
+//        } catch (IOException ex) {
+//            Logger.getLogger(RaycastRenderer.class.getName()).log(Level.SEVERE, null, ex);
+//        }
 
 
         if (gl.glGetError() > 0) {
@@ -553,7 +604,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
             
     }
     private int step(){ 
-        if( this.interactiveMode && this.lowerResolution ){
+        if(  this.lowerResolution ){
             return 2;
         }
         return 1;
