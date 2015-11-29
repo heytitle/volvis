@@ -77,7 +77,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         tFunc = new TransferFunction(volume.getMinimum(), volume.getMaximum());
         
         // uncomment this to initialize the TF with good starting values for the orange dataset 
-        //tFunc.setTestFunc();
+        tFunc.setTestFunc();
         
         
         tFunc.addTFChangeListener(this);
@@ -338,56 +338,29 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         for (int j = 0; j < image.getHeight(); j++) {
             for (int i = 0; i < image.getWidth(); i++) {
                 sumIntensity[i][j] = 0;
-                
-                
-                // Find entry point and exit point
-                double[] X = new double[3];
-                double[] multiplier = new double[3];
-                multiplier[0]  = volume.getDimX();
-                multiplier[1]  = volume.getDimY();
-                multiplier[2]  = volume.getDimZ();
-                
-                for( int x = 0; x < 3; x++ ){
-                    X[x] = uVec[x] * (i - imageCenter) +  vVec[x] * (j - imageCenter) + viewVec[x] * multiplier[x];
-                }
-                int maxDepth = (int) Math.ceil(Utils.findMax(X));
-                // End
                 kRange = optimalDepth(imageCenter, viewVec, uVec,vVec,i,j);
 
-                for (int k = kRange[0]; k < kRange[1]; k++) {
+                TFColor compositingColor = new TFColor(0,0,0,0);
+                for (int k = kRange[1]-1; k >= kRange[0]; k--) {
                     // Get calculate new volumeCenter
                     pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter) + viewVec[0] * ( k ) + volumeCenter[0];
                     pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter) + viewVec[1] * ( k ) + volumeCenter[1];
                     pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter) + viewVec[2] * ( k ) + volumeCenter[2];
 
                     int val = getVoxel(pixelCoord);
-                    sumIntensity[i][j] += val;
+                
+                    voxelColor = tFunc.getColor(val);
+
+                    compositingColor.r = voxelColor.r * voxelColor.a + (1 - voxelColor.a) * compositingColor.r;
+                    compositingColor.g = voxelColor.g * voxelColor.a + (1 - voxelColor.a) * compositingColor.g;
+                    compositingColor.b = voxelColor.b * voxelColor.a + (1 - voxelColor.a) * compositingColor.b;
+                    
+                    compositingColor.a = (1 - voxelColor.a) * compositingColor.a;
 
                 }
-                if( sumIntensity[i][j] > maxSumIntensity ) {
-                    maxSumIntensity = sumIntensity[i][j];
-                }
-            }
-        }
-        
-        for (int j = 0; j < image.getHeight(); j++) {
-            for (int i = 0; i < image.getWidth(); i++) {
-                // Map the intensity to a grey value by linear scaling
-                double intensity = sumIntensity[i][j];
-
-                voxelColor.r = intensity/maxSumIntensity;
-                voxelColor.g = voxelColor.r;
-                voxelColor.b = voxelColor.r;
-                voxelColor.a = intensity > 0 ? 1.0 : 0.0;  // this makes intensity 0 completely transparent and the rest opaque
-                // Alternatively, apply the transfer function to obtain a color
-                // voxelColor = tFunc.getColor(val);
-                // BufferedImage expects a pixel color packed as ARGB in an int
-                int c_alpha = voxelColor.a <= 1.0 ? (int) Math.floor(voxelColor.a * 255) : 255;
-                int c_red = voxelColor.r <= 1.0 ? (int) Math.floor(voxelColor.r * 255) : 255;
-                int c_green = voxelColor.g <= 1.0 ? (int) Math.floor(voxelColor.g * 255) : 255;
-                int c_blue = voxelColor.b <= 1.0 ? (int) Math.floor(voxelColor.b * 255) : 255;
-                int pixelColor = (c_alpha << 24) | (c_red << 16) | (c_green << 8) | c_blue;
-                image.setRGB(i, j, pixelColor);
+                compositingColor.a = 1 - compositingColor.a;
+                image.setRGB(i, j, (int) this.pixelColor(compositingColor));
+      
             }
         }
 
@@ -496,12 +469,12 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         gl.glPopMatrix();
 
         gl.glPopAttrib();
-//        try {
-//            File outputfile = new File("MyFile.png");
-//            ImageIO.write( image, "png", outputfile);
-//        } catch (IOException ex) {
-//            Logger.getLogger(RaycastRenderer.class.getName()).log(Level.SEVERE, null, ex);
-//        }
+        try {
+            File outputfile = new File("MyFile.png");
+            ImageIO.write( image, "png", outputfile);
+        } catch (IOException ex) {
+            Logger.getLogger(RaycastRenderer.class.getName()).log(Level.SEVERE, null, ex);
+        }
 
 
         if (gl.glGetError() > 0) {
