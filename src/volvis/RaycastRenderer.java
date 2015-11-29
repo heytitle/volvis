@@ -198,8 +198,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     
     public void interporateNeighbor( int i, int j, long pixelColor ){
         long[] colorIJ = this.colorArray(pixelColor);
-        for (int ni = -1; ni < this.step() && (ni + i) < image.getWidth() && (ni + i) > 0; ni++) {
-            for (int nj = -1; nj < this.step() && (nj + j) < image.getHeight() && (nj + j) > 0; nj++) {
+        for (int ni = -1; ni < this.step() && (ni + i) < image.getWidth() && (ni + i) >= 0; ni++) {
+            for (int nj = -1; nj < this.step() && (nj + j) < image.getHeight() && (nj + j) >= 0; nj++) {
                 if (ni == 0 && nj == 0) {
                     continue;
                 }
@@ -327,8 +327,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         short  maxSumIntensity = 0;
         int[] kRange = new int[2];                                                             
 
-        for (int j = 0; j < image.getHeight(); j++) {
-            for (int i = 0; i < image.getWidth(); i++) {
+        for (int j = 0; j < image.getHeight(); j+=this.step()) {
+            for (int i = 0; i < image.getWidth(); i+=this.step()) {
                 sumIntensity[i][j] = 0;
                 kRange = optimalDepth(imageCenter, viewVec, uVec,vVec,i,j);
 
@@ -351,8 +351,14 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
 
                 }
                 compositingColor.a = 1 - compositingColor.a;
-                image.setRGB(i, j, (int) this.pixelColor(compositingColor));
+                long pixelColor = this.pixelColor(compositingColor);
+                
+                image.setRGB(i, j, (int) pixelColor );
       
+                if( this.step() > 1  ) {
+                    this.interporateNeighbor(i, j, pixelColor);
+                }
+                    
             }
         }
 
