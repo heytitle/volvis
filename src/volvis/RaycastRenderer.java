@@ -153,19 +153,11 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         TFColor voxelColor = new TFColor();
 
         int[] kRange = new int[2];                                           
-        for (int j = this.step()/2; j < image.getHeight(); j+= this.step()) {
-            for (int i = this.step()/2; i < image.getWidth(); i+= this.step()) {
+        for (int j = 0; j < image.getHeight(); j+= this.step()) {
+            for (int i = 0; i < image.getWidth(); i+= this.step()) {
                 
                 int maxIntensity = 0;
-//                RayCastingCubeIntersection obj = new RayCastingCubeIntersection(volume, imageCenter,viewVec,uVec,vVec,volumeCenter);
-//                /*List<Integer> kList = obj.findIntersectionParameters(i,j);
-//                if(kList != null){
-//                    if(kList.size()==1){
-//                        kList.add(kList.get(0));
-//                    }
-//                    kStart = kList.get(0) < kList.get(1) ? kList.get(0) : kList.get(1);
-//                    kEnd = kList.get(0) < kList.get(1) ? kList.get(1) : kList.get(0);
-//                }*/
+
                 kRange = optimalDepth(imageCenter, viewVec, uVec,vVec,i,j);                
                 for (int k = kRange[0]; k < kRange[1]; k++) {
                     // Get calculate new volumeCenter
@@ -184,43 +176,13 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 voxelColor.g = voxelColor.r;
                 voxelColor.b = voxelColor.r;
                 voxelColor.a = maxIntensity > 0 ? 1.0 : 0.0;  // this makes intensity 0 completely transparent and the rest opaque
-                // Alternatively, apply the transfer function to obtain a color
-                // voxelColor = tFunc.getColor(val);
-                
   
                 long pixelColor = this.pixelColor(voxelColor);
                 image.setRGB(i, j, (int) pixelColor);
                 
                 /* Low Resolution Rendering */
                 if( this.step() > 1  ) {
-                    long[] colorIJ = this.colorArray( pixelColor );
-                    for( int ni = -1 ; ni < this.step() && (ni + i) < image.getWidth() ; ni++ ){
-                        for( int nj = -1; nj < this.step() && (nj + j) < image.getHeight() ; nj++ ) {
-                            if( ni == 0 && nj==0 ){
-                                continue;
-                            }
-                            int dominator = 2;
-                            
-                            /* TODO: for corner pixels, dominator should be 1
-                                Top Left : points (0,0), (0,1), (1,0)
-                                Top Right, Left : Bottom Left, Bottom Right
-                            */
-                            /* Get color from the pixel if possible ( from previous neighbor ) */
-                            long[] color = this.colorArray( image.getRGB( i+ni, j+nj) );
-                            if( (ni+1) % this.step() == 0 && (nj+1) % this.step() == 0 ){
-                                dominator = 4;
-                            }
-                            for( int nc = 0; nc < 4; nc++ ) {
-                                color[nc] += (colorIJ[nc]/dominator);
-                                if( nc==0 ){
-                                    color[nc] = color[nc] > 0 ? 255 : 0;
-                                }
-                            } 
-                            image.setRGB( i+ni,j+nj, (int)this.binaryColor(color) );
-
-                        }
-                    }
-                    
+                    this.interporateNeighbor(i, j, pixelColor);
                 }
             }
         }
@@ -233,6 +195,36 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         int c_blue = v.b <= 1.0 ? (int) Math.floor(v.b * 255) : 255;
         return this.binaryColor( new long[] {c_alpha,c_red,c_green,c_blue } );
     } 
+    
+    public void interporateNeighbor( int i, int j, long pixelColor ){
+        long[] colorIJ = this.colorArray(pixelColor);
+        for (int ni = -1; ni < this.step() && (ni + i) < image.getWidth() && (ni + i) > 0; ni++) {
+            for (int nj = -1; nj < this.step() && (nj + j) < image.getHeight() && (nj + j) > 0; nj++) {
+                if (ni == 0 && nj == 0) {
+                    continue;
+                }
+                int dominator = 2;
+
+                /* TODO: for corner pixels, dominator should be 1
+                 Top Left : points (0,0), (0,1), (1,0)
+                 Top Right, Left : Bottom Left, Bottom Right
+                 */
+                /* Get color from the pixel if possible ( from previous neighbor ) */
+                long[] color = this.colorArray(image.getRGB(i + ni, j + nj));
+                if ((ni + 1) % this.step() == 0 && (nj + 1) % this.step() == 0) {
+                    dominator = 4;
+                }
+                for (int nc = 0; nc < 4; nc++) {
+                    color[nc] += (colorIJ[nc] / dominator);
+                    if (nc == 0) {
+                        color[nc] = color[nc] > 0 ? 255 : 0;
+                    }
+                }
+                image.setRGB(i + ni, j + nj, (int) this.binaryColor(color));
+
+            }
+        }
+    }
     
     public long binaryColor( long[] rgba ){
         return ( rgba[0] << 24) | ( rgba[1] << 16) | ( rgba[2] << 8) | rgba[3];
@@ -577,7 +569,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
             
     }
     private int step(){ 
-        if(  this.lowerResolution ){
+        if(  this.interactiveMode && this.lowerResolution ){
             return 2;
         }
         return 1;
