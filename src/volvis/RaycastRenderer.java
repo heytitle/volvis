@@ -31,7 +31,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     TransferFunctionEditor tfEditor;
     TransferFunction2DEditor tfEditor2D;
 
-    private boolean triLinearInterpolation = true;
+    private boolean triLinearInterpolation = false;
     private boolean planeIntersection = true;
     private boolean lowerResolution   = true;
 
@@ -97,23 +97,27 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     }
      
 
-    short getVoxel(double[] coord) {
-
-        if (coord[0] < 0 || coord[0] > volume.getDimX() || coord[1] < 0 || coord[1] > volume.getDimY()
-                || coord[2] < 0 || coord[2] > volume.getDimZ()) {
-            return 0;
+    short getVoxel(double[] coord,boolean triLinear) {
+        short res = 0;
+        if (coord[0] < 0 || coord[0] >= volume.getDimX() || coord[1] < 0 || coord[1] >= volume.getDimY()
+                || coord[2] < 0 || coord[2] >= volume.getDimZ()) {
+            return res;
         }
-
-        int x = (int) Math.floor(coord[0]);
-        int y = (int) Math.floor(coord[1]);
-        int z = (int) Math.floor(coord[2]);
         
-        short res;
+        if(!triLinear){
+            int x = (int) Math.floor(coord[0]);
+            int y = (int) Math.floor(coord[1]);
+            int z = (int) Math.floor(coord[2]);
+            res = volume.getVoxel(x, y, z);
+        }else{
+            res = (short)getTriLinearInterpolatedVoxel(coord);           
+        }  
+        /*short res;
         try {
             res = volume.getVoxel(x, y, z);
         } catch(Exception e) {
             res = 0;
-        }
+        }*/
         return res;
     }
 
@@ -124,9 +128,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 image.setRGB(i, j, 0);
             }
         }
-//        System.out.println(image.getHeight());
-//        System.out.println(image.getWidth());
-//        System.out.println(viewMatrix.length);
+        
         // vector uVec and vVec define a plane through the origin, 
         // perpendicular to the view vector viewVec
         double[] viewVec = new double[3];
@@ -169,7 +171,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                     pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter) + viewVec[1] * (k) + volumeCenter[1];
                     pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter) + viewVec[2] * (k) + volumeCenter[2];
 
-                    int val = getVoxel(pixelCoord);
+                    int val = getVoxel(pixelCoord,triLinearInterpolation);
                     if (val > maxIntensity) {
                         maxIntensity = val;
                     }
@@ -237,7 +239,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter)
                         + volumeCenter[2];
 
-                int val = getVoxel(pixelCoord);
+                int val = getVoxel(pixelCoord,triLinearInterpolation);
                 
                 // Map the intensity to a grey value by linear scaling
                 voxelColor.r = val/max;
@@ -315,7 +317,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                     pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter) + viewVec[1] * ( k ) + volumeCenter[1];
                     pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter) + viewVec[2] * ( k ) + volumeCenter[2];
 
-                    int val = getVoxel(pixelCoord);
+                    int val = getVoxel(pixelCoord,triLinearInterpolation);
                     sumIntensity[i][j] += val;
 
                 }
@@ -562,6 +564,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     public void toggleTriLinear() {
         this.triLinearInterpolation = !this.triLinearInterpolation;
         Utils.print("Toggle Tri-linear Interpolation : " + this.triLinearInterpolation );
+        this.render();
     }
 
     public void togglePlaneIntersectionMode() {
@@ -575,5 +578,37 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         this.render();
         Utils.print("Toggle Lower Resolution : " + this.lowerResolution );
 
+    }
+    
+    private double getTriLinearInterpolatedVoxel(double[] coord) {
+        int xLow = (int) Math.floor(coord[0]);
+        int yLow = (int) Math.floor(coord[1]);
+        int zLow = (int) Math.floor(coord[2]);
+        int xHigh = (int) Math.ceil(coord[0]);
+        int yHigh = (int) Math.ceil(coord[1]);
+        int zHigh = (int) Math.ceil(coord[2]);
+        
+        if (xLow < 0 || xLow >= volume.getDimX() || yLow < 0 || yLow >= volume.getDimY()
+                || zLow < 0 || zLow >= volume.getDimZ()) {
+            return 0;
+        }
+        if (xHigh < 0 || xHigh >= volume.getDimX() || yHigh < 0 || yHigh >= volume.getDimY()
+                || zHigh < 0 || zHigh >= volume.getDimZ()) {
+            return 0;
+        }
+        double a = xHigh == xLow ? 0 : coord[0] - xLow / (xHigh - xLow);
+        double b = yHigh == yLow ? 0 : coord[1] - yLow / (yHigh - yLow);
+        double g = zHigh == zLow ? 0 : coord[2] - zLow / (zHigh - zLow);
+       
+        short x0 = volume.getVoxel(xLow, yLow, zLow);
+        short x1 = volume.getVoxel(xHigh, yLow, zLow);
+        short x2 = volume.getVoxel(xLow, yLow, zHigh);
+        short x3 = volume.getVoxel(xHigh, yLow, zHigh);
+        short x4 = volume.getVoxel(xLow, yHigh, zLow);
+        short x5 = volume.getVoxel(xHigh, yHigh, zLow);
+        short x6 = volume.getVoxel(xLow, yHigh, zHigh);
+        short x7 = volume.getVoxel(xHigh, yHigh, zHigh);
+        
+        return (1 - a) * (1 - b) * (1 - g) * x0 + a * (1 - b) * (1 - g) * x1 + (1 - a) * b * (1 - g) * x2 + a * b * (1 - g) * x3 + (1 - a) * (1 - b) * g * x4 + a * (1 - b) * g * x5 + (1 - a) * b * g * x6 + a * b * g * x7;
     }
 }

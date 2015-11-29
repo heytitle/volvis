@@ -40,7 +40,15 @@ public class Volume {
     
     
     public short getVoxel(int x, int y, int z) {
-        return data[x + dimX*(y + dimY * z)];
+        short d =0;
+        try{
+          d = data[x + dimX*(y + dimY * z)];
+        }catch(Exception e){
+            e.printStackTrace();
+            d = 0;
+            System.out.println("data size :"+data.length + " x + dimX*(y + dimY * z) :" +(x + dimX*(y + dimY * z)) +"  x:"+x+"  y:"+y+"  z:"+z+"  dimx,dimY,dimZ:"+dimX+","+dimY+","+dimZ);
+        }
+        return d;
     }
     
     public void setVoxel(int x, int y, int z, short value) {
