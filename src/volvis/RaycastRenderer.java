@@ -188,6 +188,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 }
             }
         }
+        Utils.print("MIP completed");
     }
     
     public long pixelColor( TFColor v ){
@@ -586,7 +587,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     public void toggleTriLinear() {
         this.triLinearInterpolation = !this.triLinearInterpolation;
         Utils.print("Toggle Tri-linear Interpolation : " + this.triLinearInterpolation );
-        this.render();
+        this.changed();
     }
 
     public void togglePlaneIntersectionMode() {
@@ -630,7 +631,6 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         short x5 = volume.getVoxel(xHigh, yHigh, zLow);
         short x6 = volume.getVoxel(xLow, yHigh, zHigh);
         short x7 = volume.getVoxel(xHigh, yHigh, zHigh);
-        
         return (1 - a) * (1 - b) * (1 - g) * x0 + a * (1 - b) * (1 - g) * x1 + (1 - a) * b * (1 - g) * x2 + a * b * (1 - g) * x3 + (1 - a) * (1 - b) * g * x4 + a * (1 - b) * g * x5 + (1 - a) * b * g * x6 + a * b * g * x7;
-    }
+       }
 }
