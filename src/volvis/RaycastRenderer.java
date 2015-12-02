@@ -21,6 +21,7 @@ import util.TFChangeListener;
 import util.VectorMath;
 import util.Utils;
 import volume.GradientVolume;
+import volume.VoxelGradient;
 import volume.Volume;
 
 /**
@@ -42,7 +43,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
 
     
     public enum RENDER_MODE {
-        SLICER, MIP, COMPOSITING
+        SLICER, MIP, COMPOSITING, TWODTRANSFER
     }
     
     private RENDER_MODE mode = RENDER_MODE.SLICER;
@@ -335,7 +336,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 sumIntensity[i][j] = 0;
                 kRange = optimalDepth(imageCenter, viewVec, uVec,vVec,i,j);
 
-                TFColor compositingColor = new TFColor(0,0,0,0);
+                TFColor compositingColor = new TFColor(0,0,0,0);                
                 for (int k = kRange[1]-1; k >= kRange[0]; k--) {
                     // Get calculate new volumeCenter
                     pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter) + viewVec[0] * ( k ) + volumeCenter[0];
@@ -351,6 +352,82 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                     compositingColor.b = voxelColor.b * voxelColor.a + (1 - voxelColor.a) * compositingColor.b;
                     
                     compositingColor.a = (1 - voxelColor.a) * compositingColor.a;
+                   
+                }
+                compositingColor.a = 1 - compositingColor.a;
+                long pixelColor = this.pixelColor(compositingColor);
+                
+                image.setRGB(i, j, (int) pixelColor );
+      
+                if( this.step() > 1  ) {
+                    this.interporateNeighbor(i, j, pixelColor);
+                }
+                    
+            }
+        }
+
+    }
+    
+
+  void twoDTransfer() {
+      
+        for (int j = 0; j < image.getHeight(); j++) {
+            for (int i = 0; i < image.getWidth(); i++) {
+                image.setRGB(i, j, 0);
+            }
+        }
+
+        // vector uVec and vVec define a plane through the origin, 
+        // perpendicular to the view vector viewVec
+        double[] viewVec = new double[3];
+        double[] uVec = new double[3];
+        double[] vVec = new double[3];
+        VectorMath.setVector(viewVec, viewMatrix[2], viewMatrix[6], viewMatrix[10]);
+        VectorMath.setVector(uVec, viewMatrix[0], viewMatrix[4], viewMatrix[8]);
+        VectorMath.setVector(vVec, viewMatrix[1], viewMatrix[5], viewMatrix[9]);
+        // image is square
+        int imageCenter = image.getWidth() / 2;
+
+        double[] pixelCoord = new double[3];
+        double[] volumeCenter = new double[3];
+        VectorMath.setVector(volumeCenter, volume.getDimX() / 2, volume.getDimY() / 2, volume.getDimZ() / 2);
+
+        // sample on a plane through the origin of the volume data
+        double max = volume.getMaximum();
+        TFColor voxelColor = new TFColor();
+        
+        short[][] sumIntensity = new short[image.getHeight()][image.getWidth()];
+        short  maxSumIntensity = 0;
+        int[] kRange = new int[2];                                                             
+
+        for (int j = 0; j < image.getHeight(); j+=this.step()) {
+            for (int i = 0; i < image.getWidth(); i+=this.step()) {
+                sumIntensity[i][j] = 0;
+                kRange = optimalDepth(imageCenter, viewVec, uVec,vVec,i,j);
+
+                TFColor compositingColor = new TFColor(0,0,0,0);                
+                for (int k = kRange[0]; k < kRange[1]; k++) {
+                    //System.out.println(kRange[0]+"::"+kRange[1]);
+                   
+                    // Get calculate new volumeCenter
+                    pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter) + viewVec[0] * ( k ) + volumeCenter[0];
+                    pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter) + viewVec[1] * ( k ) + volumeCenter[1];
+                    pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter) + viewVec[2] * ( k ) + volumeCenter[2];
+
+                    int val = getVoxel(pixelCoord,triLinearInterpolation);
+                
+                    //voxelColor = tFunc.getColor(val);
+                    voxelColor = tfEditor2D.triangleWidget.color;
+                    
+                    double opacity = computeOpacity( (int)pixelCoord[0], (int)pixelCoord[1], (int)pixelCoord[2], val);
+
+                    compositingColor.r = voxelColor.r * opacity + (1 - opacity) * compositingColor.r;
+                    compositingColor.g = voxelColor.g * opacity + (1 - opacity) * compositingColor.g;
+                    compositingColor.b = voxelColor.b * opacity + (1 - opacity) * compositingColor.b;
+                    
+                    //compositingColor.a = (1 - voxelColor.a) * compositingColor.a;
+                    compositingColor.a = (1 - opacity ) * compositingColor.a;
+                   
 
                 }
                 compositingColor.a = 1 - compositingColor.a;
@@ -366,8 +443,6 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         }
 
     }
-
-
     private void drawBoundingBox(GL2 gl) {
         gl.glPushAttrib(GL2.GL_CURRENT_BIT);
         gl.glDisable(GL2.GL_LIGHTING);
@@ -507,7 +582,13 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
             case COMPOSITING:
                 this.compositing();
                 break;
+            case TWODTRANSFER:
+                this.twoDTransfer();
+                break;
+
         }
+        
+       
         
         long endTime = System.currentTimeMillis();
         double runningTime = (endTime - startTime);
@@ -632,5 +713,31 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         short x6 = volume.getVoxel(xLow, yHigh, zHigh);
         short x7 = volume.getVoxel(xHigh, yHigh, zHigh);
         return (1 - a) * (1 - b) * (1 - g) * x0 + a * (1 - b) * (1 - g) * x1 + (1 - a) * b * (1 - g) * x2 + a * b * (1 - g) * x3 + (1 - a) * (1 - b) * g * x4 + a * (1 - b) * g * x5 + (1 - a) * b * g * x6 + a * b * g * x7;
+       }
+    
+       private double computeOpacity(int x, int y, int z, double intensity){
+         //int alpha = tfEditor2D.getColorModel().getAlpha(winWidth);
+         TFColor color = tfEditor2D.triangleWidget.color;
+         short baseIntensity = tfEditor2D.triangleWidget.baseIntensity;
+         double radius = tfEditor2D.triangleWidget.radius;
+         VoxelGradient voxelGradient = null;
+         try{
+            voxelGradient = gradients.getGradient(x,y,z);            
+         }catch(Exception e){
+             Utils.printVector(new int[]{x,y,z});
+             Utils.print("x + dimX * (y + dimY * z) :"+(x + volume.getDimX() * (y + volume.getDimY() * z)));
+             e.printStackTrace();
+             System.exit(1);
+         } 
+         float gradientMagnitude = voxelGradient.mag;
+         
+         
+         if(gradientMagnitude==0 && intensity == baseIntensity){
+             return color.a;
+         }else if( gradientMagnitude > 0  && (intensity - radius*gradientMagnitude <= baseIntensity) && (baseIntensity <= intensity+radius*gradientMagnitude)){
+             return  color.a*( 1 -(1/radius)*Math.abs( ( baseIntensity - intensity)/(gradientMagnitude) ));
+         }
+         //
+         return 0.0;  
        }
 }
