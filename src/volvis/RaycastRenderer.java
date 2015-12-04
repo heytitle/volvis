@@ -722,7 +722,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
          double radius = tfEditor2D.triangleWidget.radius;
          VoxelGradient voxelGradient = null;
          try{
-            voxelGradient = gradients.getGradient(x,y,z);            
+                voxelGradient = gradients.getTriLinearGradient(x,y,z); 
          }catch(Exception e){
              Utils.printVector(new int[]{x,y,z});
              Utils.print("x + dimX * (y + dimY * z) :"+(x + volume.getDimX() * (y + volume.getDimY() * z)));
