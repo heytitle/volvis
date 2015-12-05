@@ -29,7 +29,7 @@ public class GradientVolume {
         return data[x + dimX * (y + dimY * z)];
     }
     
-    public VoxelGradient getTriLinearGradient( int x, int y, int z ) {
+    public VoxelGradient getTriLinearGradient( float x, float y, float z ) {
         int xLow = (int) Math.floor(x);
         int yLow = (int) Math.floor(y);
         int zLow = (int) Math.floor(z);

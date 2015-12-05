@@ -2,6 +2,7 @@ package util;
 
 import java.util.Arrays;
 import java.util.List;
+import volvis.TFColor;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -65,4 +66,17 @@ public class Utils {
         return max;
     }
     
+    public static double dotVector( double[] a, double[] b ) {
+        double sum = 0;
+        for( int i = 0; i < a.length; i++ ){
+            sum += ( a[i]+b[i] );
+        }
+        return sum;
+    }
+    
+    public static void setTFColorFromArray( TFColor c, double[] rgb ) {
+        c.r = rgb[0];
+        c.g = rgb[1];
+        c.b = rgb[2];
+    }
 }

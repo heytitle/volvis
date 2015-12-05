@@ -28,4 +28,8 @@ public class VoxelGradient {
         return new float[]{ x,y,z };
     }
     
+    public double[] normalisedVector(){
+        return new double[]{ x/this.mag, y/this.mag, z/this.mag };
+    }
+    
 }
