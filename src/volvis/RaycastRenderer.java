@@ -407,7 +407,6 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
 
                 TFColor compositingColor = new TFColor(0, 0, 0, 0);
                 VoxelGradient gradient;
-                VoxelGradient maxGradient;
                 for (int k = kRange[1]; k > kRange[0]; k--) {
                     //System.out.println(kRange[0]+"::"+kRange[1]);
 
@@ -427,7 +426,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                     
                     if (this.renderShading) {    
                         rgb = new double[]{0, 0, 0};
-                        if (gradient.mag > 0) {
+                        if (gradient.mag > 0 && dotProduct > 0) {
                             double[] compRGB = new double[]{voxelColor.r, voxelColor.g, voxelColor.b};
                             for (int z = 0; z < 3; z++) {
                                 rgb[z] = 0.1 + compRGB[z] * 0.7 * dotProduct + 0.2 * Math.pow(dotProduct, 10);
