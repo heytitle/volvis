@@ -424,7 +424,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                     double dotProduct = VectorMath.dotproduct(reverseView, gradient.normalisedVector());
                     double opacity = computeOpacity(val, gradient);
                     
-                    if (this.renderShading) {    
+                    if (this.renderShading){    
                         rgb = new double[]{0, 0, 0};
                         if (gradient.mag > 0 && dotProduct > 0) {
                             double[] compRGB = new double[]{voxelColor.r, voxelColor.g, voxelColor.b};
@@ -432,6 +432,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                                 rgb[z] = 0.1 + compRGB[z] * 0.7 * dotProduct + 0.2 * Math.pow(dotProduct, 10);
                             }
                             Utils.setTFColorFromArray(voxelColor, rgb);
+                        }else{
+                            continue;
                         }
                     }
                    
