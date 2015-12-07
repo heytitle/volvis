@@ -769,6 +769,10 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         double radius = tfEditor2D.triangleWidget.radius;
       
         float gradientMagnitude = voxelGradient.mag;
+        
+        if( voxelGradient.mag < tfEditor2D.triangleWidget.minGrad || voxelGradient.mag > tfEditor2D.triangleWidget.maxGrad   ) {
+            return 0;
+        }
 
         if (gradientMagnitude == 0 && intensity == baseIntensity) {
             return color.a;
