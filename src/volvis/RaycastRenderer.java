@@ -406,8 +406,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 kRange = optimalDepth(imageCenter, viewVec, uVec, vVec, i, j);
 
                 TFColor compositingColor = new TFColor(0, 0, 0, 0);
-                VoxelGradient gradient;
-                for (int k = kRange[0]; k < kRange[1]; k++) {
+                VoxelGradient maxGradient = new VoxelGradient(0,0,0);
+                for (int k = kRange[1]-1; k >= kRange[0]; k--) {
                     //System.out.println(kRange[0]+"::"+kRange[1]);
 
                     // Get calculate new volumeCenter
@@ -419,19 +419,16 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
 
                     //voxelColor = tFunc.getColor(val);
                     voxelColor = tfEditor2D.triangleWidget.color;
-                    gradient = gradients.getTriLinearGradient((float) pixelCoord[0], (float) pixelCoord[1], (float) pixelCoord[2]);
+                    VoxelGradient gradient = gradients.getTriLinearGradient((float) pixelCoord[0], (float) pixelCoord[1], (float) pixelCoord[2]);
                     double opacity = computeOpacity(val, gradient);
                     
-                    if (this.renderShading) {    
-                        rgb = new double[]{0, 0, 0};
-                        if (gradient.mag > 0) {
-                            double[] compRGB = new double[]{voxelColor.r, voxelColor.g, voxelColor.b};
-                            double dotProduct = VectorMath.dotproduct(reverseView, gradient.normalisedVector());
-                            for (int z = 0; z < 3; z++) {
-                                rgb[z] = 0.1 + compRGB[z] * 0.7 * dotProduct + 0.2 * Math.pow(dotProduct, 10);
-                            }
-                            Utils.setTFColorFromArray(voxelColor, rgb);
-                        }
+                    double dotProduct = VectorMath.dotproduct(reverseView, gradient.normalisedVector());
+
+                    if( maxGradient.mag < gradient.mag && dotProduct > 0 && opacity > 0 ) {
+                        maxGradient = gradient;
+                    }
+                    if( i == (int)volume.getDimX()/2 && j ==(int)volume.getDimY()/2 ) {
+                        Utils.printVector(new double[]{ k, gradient.mag, maxGradient.mag, pixelCoord[2]} );
                     }
                     
                     compositingColor.r = voxelColor.r * opacity + (1 - opacity) * compositingColor.r;
@@ -448,6 +445,18 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 compositingColor.a = 1 - compositingColor.a;
 
                 
+                if (this.renderShading) {
+                    rgb = new double[]{0, 0, 0};
+                    double dotProduct = VectorMath.dotproduct(reverseView, maxGradient.normalisedVector());
+
+                    if ( dotProduct > 0) {
+                        double[] compRGB = new double[]{compositingColor.r, compositingColor.g, compositingColor.b};
+                        for (int z = 0; z < 3; z++) {
+                            rgb[z] = 0.1 + compRGB[z] * 0.7 * dotProduct + 0.2 * Math.pow(dotProduct, 10);
+                        }
+                        Utils.setTFColorFromArray(compositingColor, rgb);
+                    }
+                }
 
                 long pixelColor = this.pixelColor(compositingColor);
 
