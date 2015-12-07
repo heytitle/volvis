@@ -37,9 +37,10 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     TransferFunctionEditor tfEditor;
     TransferFunction2DEditor tfEditor2D;
 
-    private boolean triLinearInterpolation = false;
+    private boolean triLinearInterpolation = true;
     private boolean planeIntersection = true;
     private boolean lowerResolution = true;
+    private boolean renderShading = false;
 
     public enum RENDER_MODE {
 
@@ -418,21 +419,20 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
 
                     //voxelColor = tFunc.getColor(val);
                     voxelColor = tfEditor2D.triangleWidget.color;
-
-                    gradient = gradients.getTriLinearGradient( (float)pixelCoord[0], (float)pixelCoord[1], (float)pixelCoord[2]);
-                    
+                    gradient = gradients.getTriLinearGradient((float) pixelCoord[0], (float) pixelCoord[1], (float) pixelCoord[2]);
                     double opacity = computeOpacity(val, gradient);
-                    rgb = new double[]{0,0,0};
-                    if (gradient.mag > 0) {
-                        double[] compRGB = new double[]{voxelColor.r, voxelColor.g, voxelColor.b};
-                        double dotProduct = VectorMath.dotproduct(reverseView, gradient.normalisedVector());
-                        for (int z = 0; z < 3; z++) {
-                            rgb[z] = 0.1 + compRGB[z] * 0.7 * dotProduct + 0.2 * Math.pow(dotProduct, 10);
-                        }
-                        Utils.setTFColorFromArray( voxelColor, rgb);
-                    }
-
                     
+                    if (this.renderShading) {    
+                        rgb = new double[]{0, 0, 0};
+                        if (gradient.mag > 0) {
+                            double[] compRGB = new double[]{voxelColor.r, voxelColor.g, voxelColor.b};
+                            double dotProduct = VectorMath.dotproduct(reverseView, gradient.normalisedVector());
+                            for (int z = 0; z < 3; z++) {
+                                rgb[z] = 0.1 + compRGB[z] * 0.7 * dotProduct + 0.2 * Math.pow(dotProduct, 10);
+                            }
+                            Utils.setTFColorFromArray(voxelColor, rgb);
+                        }
+                    }
                     
                     compositingColor.r = voxelColor.r * opacity + (1 - opacity) * compositingColor.r;
                     compositingColor.g = voxelColor.g * opacity + (1 - opacity) * compositingColor.g;
@@ -698,6 +698,12 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         this.render();
         Utils.print("Toggle Lower Resolution : " + this.lowerResolution);
 
+    }
+    
+    public void toggleShading(){
+        this.renderShading = !this.renderShading;
+        this.changed();
+        Utils.print("Toggle Shading : " + this.renderShading );
     }
 
     private double getTriLinearInterpolatedVoxel(double[] coord) {

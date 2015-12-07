@@ -95,6 +95,7 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
             }
         });
 
+        triLinearCheckbox.setSelected(true);
         triLinearCheckbox.setText("Tri-linear Interpolation");
         triLinearCheckbox.setName(""); // NOI18N
         triLinearCheckbox.addActionListener(new java.awt.event.ActionListener() {
@@ -190,7 +191,8 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_tf2dButtonActionPerformed
 
     private void shadingCheckboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_shadingCheckboxActionPerformed
-        JOptionPane.showMessageDialog(this, "Not implemented.");
+
+        this.renderer.toggleShading();
     }//GEN-LAST:event_shadingCheckboxActionPerformed
 
     private void triLinearCheckboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_triLinearCheckboxActionPerformed
