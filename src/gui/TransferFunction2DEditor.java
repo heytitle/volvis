@@ -47,7 +47,7 @@ public class TransferFunction2DEditor extends javax.swing.JPanel {
         labelMinVal.setText("0");
         labelMaxVal.setText(Integer.toString(maxIntensity));
 
-        triangleWidget = new TriangleWidget((short) (maxIntensity / 2), 1.0, 0, maxGradientMagnitude );
+        triangleWidget = new TriangleWidget((short) (maxIntensity / 2), 0.4, 0, maxGradientMagnitude );
         setSelectedInfo();
     }
 
@@ -303,7 +303,12 @@ public class TransferFunction2DEditor extends javax.swing.JPanel {
 
     private void opacityLabelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_opacityLabelActionPerformed
         try {
-            double value = Double.parseDouble(opacityLabel.getText());
+            //System.out.println("opacity = "+opacityLabel.getText());
+            String opacityValue = opacityLabel.getText();
+            if(opacityValue.contains(",")){
+                opacityValue = opacityValue.replace(',', '.');
+            }
+            double value = Double.parseDouble(opacityValue);
             if (value < 0) {
                 value = 0;
             } 
