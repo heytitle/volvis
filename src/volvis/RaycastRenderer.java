@@ -606,6 +606,10 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         Utils.print("Render Mode : " + this.mode + " with step " + this.step());
         long startTime = System.currentTimeMillis();
 
+        if(this.panel.isLimitDepth()){
+            Utils.print("Use specified depth :");
+            Utils.printVector(this.panel.depthRange());
+        }
         switch (this.mode) {
             case MIP:
                 this.mip();
@@ -635,6 +639,9 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
 
         if (!this.planeIntersection) {
             return new int[]{0, volume.getDiagonalDepth()};
+        }else if(this.panel.isLimitDepth() ){
+            
+            return this.panel.depthRange();
         }
 
         //set vloume dimensions volume[x,y,z][low,high] = vloume[0,1,2][0,1]

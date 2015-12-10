@@ -40,6 +40,7 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
     private void initComponents() {
 
         buttonGroup1 = new javax.swing.ButtonGroup();
+        jTextField2 = new javax.swing.JTextField();
         jLabel1 = new javax.swing.JLabel();
         renderingSpeedLabel = new javax.swing.JLabel();
         slicerButton = new javax.swing.JRadioButton();
@@ -50,6 +51,14 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
         triLinearCheckbox = new javax.swing.JCheckBox();
         planeIntersection = new javax.swing.JCheckBox();
         lowerResolution = new javax.swing.JCheckBox();
+        limitDepthCheckbox = new javax.swing.JCheckBox();
+        depthMin = new javax.swing.JTextField();
+        depthMax = new javax.swing.JTextField();
+        jLabel2 = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
+        jButton1 = new javax.swing.JButton();
+
+        jTextField2.setText("jTextField1");
 
         jLabel1.setText("Rendering time (ms):");
 
@@ -120,6 +129,28 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
             }
         });
 
+        limitDepthCheckbox.setText("Depth Limit");
+        limitDepthCheckbox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                limitDepthCheckboxActionPerformed(evt);
+            }
+        });
+
+        depthMin.setText("-100");
+
+        depthMax.setText("100");
+
+        jLabel2.setText("From");
+
+        jLabel3.setText("To");
+
+        jButton1.setText("Update");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -139,8 +170,20 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
                         .addComponent(shadingCheckbox)
                         .addComponent(triLinearCheckbox)
                         .addComponent(planeIntersection)
-                        .addComponent(lowerResolution)))
-                .addContainerGap(292, Short.MAX_VALUE))
+                        .addComponent(lowerResolution))
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                        .addComponent(limitDepthCheckbox)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(depthMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel3)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(depthMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(jButton1)
+                .addContainerGap(124, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -165,7 +208,15 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
                 .addComponent(planeIntersection)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(lowerResolution)
-                .addContainerGap(50, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(limitDepthCheckbox)
+                    .addComponent(depthMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(depthMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel2)
+                    .addComponent(jLabel3)
+                    .addComponent(jButton1))
+                .addContainerGap(15, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -210,10 +261,34 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
         this.renderer.toggleLowerResolution();
     }//GEN-LAST:event_lowerResolutionActionPerformed
 
+    public boolean isLimitDepth(){
+        return this.limitDepthCheckbox.isSelected();
+    }
+    
+    public int[] depthRange(){
+        return new int[] { Integer.parseInt(this.depthMin.getText()), Integer.parseInt(this.depthMax.getText()) };
+    }
+    
+    private void limitDepthCheckboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_limitDepthCheckboxActionPerformed
+        // TODO add your handling code here:
+        this.renderer.changed();
+    }//GEN-LAST:event_limitDepthCheckboxActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        this.renderer.changed();        // TODO add your handling code here:
+    }//GEN-LAST:event_jButton1ActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JRadioButton compositingButton;
+    private javax.swing.JTextField depthMax;
+    private javax.swing.JTextField depthMin;
+    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JTextField jTextField2;
+    private javax.swing.JCheckBox limitDepthCheckbox;
     private javax.swing.JCheckBox lowerResolution;
     private javax.swing.JRadioButton mipButton;
     private javax.swing.JCheckBox planeIntersection;
