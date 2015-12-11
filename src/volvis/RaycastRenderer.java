@@ -326,6 +326,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         short[][] sumIntensity = new short[image.getHeight()][image.getWidth()];
         short maxSumIntensity = 0;
         int[] kRange = new int[2];
+        double[] phongParams = this.panel.getPhongParams();
+
 
         for (int j = 0; j < image.getHeight(); j += this.step()) {
             for (int i = 0; i < image.getWidth(); i += this.step()) {
@@ -354,7 +356,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                         if (gradient.mag > 0 && dotProduct > 0) {
                             double[] compRGB = new double[]{voxelColor.r, voxelColor.g, voxelColor.b};
                             for (int z = 0; z < 3; z++) {
-                                rgb[z] = 0.1 + compRGB[z] * 0.7 * dotProduct + 0.2 * Math.pow(dotProduct, 10);
+                                rgb[z] = phongParams[0] + compRGB[z] * phongParams[1] * dotProduct + phongParams[2] * Math.pow(dotProduct, phongParams[3]);
                             }
                             Utils.setTFColorFromArray(voxelColor, rgb);
                         } else {
@@ -418,6 +420,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         short maxSumIntensity = 0;
         int[] kRange = new int[2];
         double[] rgb;
+        
+        double[] phongParams = this.panel.getPhongParams();
 
         for (int j = 0; j < image.getHeight(); j += this.step()) {
             for (int i = 0; i < image.getWidth(); i += this.step()) {
@@ -447,7 +451,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                         if (gradient.mag > 0 && dotProduct > 0) {
                             double[] compRGB = new double[]{voxelColor.r, voxelColor.g, voxelColor.b};
                             for (int z = 0; z < 3; z++) {
-                                rgb[z] = 0.1 + compRGB[z] * 0.7 * dotProduct + 0.2 * Math.pow(dotProduct, 10);
+                                rgb[z] = phongParams[0] + compRGB[z] * phongParams[1] * dotProduct + phongParams[2] * Math.pow(dotProduct, phongParams[3]);
                             }
                             Utils.setTFColorFromArray(voxelColor, rgb);
                         } else {
