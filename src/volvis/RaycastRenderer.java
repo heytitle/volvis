@@ -351,7 +351,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                         double[] reverseView = new double[3];
                         VectorMath.setVector(reverseView, -viewMatrix[2], -viewMatrix[6], -viewMatrix[10]);
                         
-                        double dotProduct = VectorMath.dotproduct(reverseView, gradient.normalisedVector());
+                        double dotProduct = VectorMath.dotproduct(viewVec, gradient.normalisedVector());
                         double[] rgb = new double[]{0, 0, 0};
                         if (gradient.mag > 0 && dotProduct > 0) {
                             double[] compRGB = new double[]{voxelColor.r, voxelColor.g, voxelColor.b};
@@ -443,12 +443,12 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                     voxelColor = tfEditor2D.triangleWidget.color.clone();
 
                     gradient = gradients.getTriLinearGradient((float) pixelCoord[0], (float) pixelCoord[1], (float) pixelCoord[2]);
-                    double dotProduct = VectorMath.dotproduct(reverseView, gradient.normalisedVector());
+                    double dotProduct = VectorMath.dotproduct(viewVec, gradient.normalisedVector());
                     double opacity = computeOpacity(val, gradient);
 
                     if (this.renderShading) {
                         rgb = new double[]{0, 0, 0};
-                        if (gradient.mag > 0 && dotProduct > 0) {
+                        if (gradient.mag > 0 && dotProduct > 0 && opacity > 0) {
                             double[] compRGB = new double[]{voxelColor.r, voxelColor.g, voxelColor.b};
                             for (int z = 0; z < 3; z++) {
                                 rgb[z] = phongParams[0] + compRGB[z] * phongParams[1] * dotProduct + phongParams[2] * Math.pow(dotProduct, phongParams[3]);
